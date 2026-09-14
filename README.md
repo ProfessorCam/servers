@@ -34,6 +34,11 @@ and removes it):
 docker run --rm -it --name server-basics -p 8083:8083 professorcryan/servers
 ```
 
+The container's `nginx.conf` has one extra rule the published copy does not: `location = /echo` answers
+**every** HTTP method with a plain-text description of what it received (method, path, Content-Type,
+Content-Length, client address). The Web Server row uses it so students can see a POST, PUT or DELETE
+land somewhere, and compare with the 405 a static file gives. On GitHub Pages `/echo` is simply a 404.
+
 Unlike the Protocols site there is no live-network section, so no host networking is needed; a plain
 port mapping is enough. Change `listen 8083;` in `nginx.conf` and the port mapping in
 `docker-compose.yml` if 8083 is taken. The image name and port shown on the welcome page are
@@ -70,6 +75,15 @@ who has not chosen yet. The palette is the set of CSS variables at the top of `s
 values are the `:root[data-theme="dark"]` block at the bottom, and `index.html` applies the theme before
 the first paint so there is no flash.
 
+## The "try the methods" panel (Web Server row)
+
+A section with `tryit: true` in `site/lessons.js` renders a small panel (`tryitHtml` / `wireTryIt` in
+`site/app.js`) that sends a chosen method and path to the server the page came from with `fetch()` and
+prints the status, headers and body unedited, plus the same request as a curl command. The example
+buttons are the `TRY_EXAMPLES` list in `app.js`. Because the page is same-origin with the server, no
+CORS is involved; the browser still hides a few headers (Set-Cookie). Opening the page from `file://`
+makes every request fail, which the panel says.
+
 ## Operating system switcher (Windows Server | Ubuntu | Alma / Rocky)
 
 Inside each row, the **Set it up** section has three buttons. The choice applies to every row, is stored
@@ -87,7 +101,7 @@ the domain as a member with realmd and sssd. The page says so.
 ```
 Dockerfile           nginx:alpine + the site directory
 docker-compose.yml   one service on port 8083
-nginx.conf           serves site/
+nginx.conf           serves site/, plus the /echo location for the request-method exercises
 site/
   index.html         page shell: rail, left <aside>, right <main>
   style.css          layout, diagram, command block and OS-switcher styling

@@ -178,6 +178,7 @@
     lv(s.p || []).forEach(function (p) { h.push('<p>' + p + '</p>'); });
     if (s.steps) { h.push('<ol class="steps">'); lv(s.steps).forEach(function (t) { h.push('<li>' + t + '</li>'); }); h.push('</ol>'); }
     if (s.table) h.push(tableHtml(s.table));
+    if (s.tryit) h.push(tryitHtml());
     if (s.os) h.push(osHtml(s.os));
     lv(s.after || []).forEach(function (p) { h.push('<p>' + p + '</p>'); });
     h.push('</section>');
@@ -201,6 +202,93 @@
     });
     h.push('</table></div>');
     return h.join('');
+  }
+
+  /* ---------- "try a request on this site": sends any method with fetch() and shows the raw answer ---------- */
+
+  var TRY_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+  var TRY_EXAMPLES = [
+    { label: 'GET a page', m: 'GET', p: 'index.html' },
+    { label: 'HEAD the same page', m: 'HEAD', p: 'index.html' },
+    { label: 'GET a page that is not there', m: 'GET', p: 'missing.html' },
+    { label: 'POST a form', m: 'POST', p: 'index.html', b: 'name=alice&role=student', t: 'application/x-www-form-urlencoded' },
+    { label: 'PUT a file', m: 'PUT', p: 'notes.txt', b: 'hello from alice', t: 'text/plain' },
+    { label: 'DELETE a page', m: 'DELETE', p: 'index.html' },
+    { label: 'OPTIONS: what is allowed?', m: 'OPTIONS', p: 'index.html' },
+    { label: 'POST to /echo (container only)', m: 'POST', p: 'echo', b: 'name=alice&role=student', t: 'application/x-www-form-urlencoded' }
+  ];
+
+  function tryitHtml() {
+    var h = ['<div class="tryit" id="tryit">'];
+    h.push('<div class="tryit-examples">' + TRY_EXAMPLES.map(function (x, i) { return '<button type="button" class="tryit-ex" data-i="' + i + '">' + esc(x.label) + '</button>'; }).join('') + '</div>');
+    h.push('<div class="tryit-row">');
+    h.push('<select class="tryit-method" aria-label="Method">' + TRY_METHODS.map(function (m) { return '<option>' + m + '</option>'; }).join('') + '</select>');
+    h.push('<span class="tryit-origin">' + esc(location.origin + location.pathname.replace(/[^\/]*$/, '')) + '</span>');
+    h.push('<input class="tryit-path" aria-label="Path" value="index.html" spellcheck="false">');
+    h.push('<button type="button" class="tryit-send">Send</button>');
+    h.push('</div>');
+    h.push('<div class="tryit-row tryit-bodyrow" hidden><label>Body <input class="tryit-type" aria-label="Content-Type" value="application/x-www-form-urlencoded" spellcheck="false"></label>');
+    h.push('<textarea class="tryit-body" rows="2" spellcheck="false">name=alice&amp;role=student</textarea></div>');
+    h.push('<pre class="cmd tryit-curl" aria-label="The same request as a curl command"></pre>');
+    h.push('<pre class="out tryit-out">Pick an example above, or choose a method and a path, then Send. The answer appears here exactly as the server sent it.</pre>');
+    h.push('</div>');
+    return h.join('');
+  }
+
+  function wireTryIt() {
+    var box = document.getElementById('tryit');
+    if (!box) return;
+    var method = box.querySelector('.tryit-method'), path = box.querySelector('.tryit-path'), bodyRow = box.querySelector('.tryit-bodyrow');
+    var body = box.querySelector('.tryit-body'), type = box.querySelector('.tryit-type'), out = box.querySelector('.tryit-out'), curl = box.querySelector('.tryit-curl');
+    function hasBody() { return /^(POST|PUT|PATCH)$/.test(method.value); }
+    function base() { return location.origin + location.pathname.replace(/[^\/]*$/, ''); }
+    function update() {
+      bodyRow.hidden = !hasBody();
+      var url = base() + path.value.replace(/^\//, '');
+      var c = 'curl -i';
+      if (method.value === 'HEAD') c += ' -I';
+      else if (method.value !== 'GET') c += ' -X ' + method.value;
+      if (hasBody()) c += " -H 'Content-Type: " + type.value + "' -d '" + body.value.replace(/'/g, "'\\''") + "'";
+      curl.textContent = c + ' ' + url;
+    }
+    function send() {
+      var url = base() + path.value.replace(/^\//, '');
+      var opts = { method: method.value, cache: 'no-store', headers: {} };
+      if (hasBody()) { opts.body = body.value; opts.headers['Content-Type'] = type.value; }
+      var lines = ['> ' + method.value + ' /' + path.value.replace(/^\//, '') + ' HTTP/1.1', '> Host: ' + location.host];
+      if (hasBody()) { lines.push('> Content-Type: ' + type.value, '> Content-Length: ' + new Blob([body.value]).size, '>', '> ' + body.value); }
+      lines.push('');
+      out.textContent = lines.join('\n') + 'sending...';
+      var t0 = Date.now();
+      fetch(url, opts).then(function (r) {
+        lines.push('< HTTP ' + r.status + (r.statusText ? ' ' + r.statusText : '') + '   (' + (Date.now() - t0) + ' ms)');
+        r.headers.forEach(function (v, k) { lines.push('< ' + k + ': ' + v); });
+        return r.text().then(function (txt) {
+          lines.push('<');
+          if (method.value === 'HEAD') lines.push('(no body: HEAD asks for the headers only)');
+          else if (!txt) lines.push('(empty body)');
+          else lines.push(txt.length > 700 ? txt.slice(0, 700) + '\n... (' + txt.length + ' characters in total)' : txt);
+          out.textContent = lines.join('\n');
+        });
+      }).catch(function (e) {
+        lines.push('The browser could not send that request: ' + e.message + '. If you opened this page from a file, serve it over HTTP instead (see the welcome page).');
+        out.textContent = lines.join('\n');
+      });
+    }
+    box.addEventListener('click', function (e) {
+      var ex = e.target.closest('.tryit-ex');
+      if (ex) {
+        var x = TRY_EXAMPLES[+ex.dataset.i];
+        method.value = x.m; path.value = x.p;
+        if (x.b !== undefined) { body.value = x.b; type.value = x.t || 'text/plain'; }
+        update(); send(); return;
+      }
+      if (e.target.closest('.tryit-send')) send();
+    });
+    box.addEventListener('input', update);
+    box.addEventListener('change', update);
+    path.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); send(); } });
+    update();
   }
 
   var CLIENT_OS = { win: 'Windows client', linux: 'Linux client', any: 'Any client' };
@@ -256,6 +344,7 @@
     h.push('</article>');
     content.innerHTML = h.join('');
     content.addEventListener('click', onOsClick);
+    wireTryIt();
   }
 
   function onOsClick(e) {

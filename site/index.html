@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Server Basics</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <button id="menu-btn" class="rail" type="button" aria-label="Open site menu" aria-expanded="false" aria-controls="sitemenu">
+      <span class="rail-chevron" aria-hidden="true">&#8250;</span>
+      <span class="rail-logo" aria-hidden="true">&#9673;</span>
+    </button>
+    <nav id="sitemenu" class="sitemenu" aria-label="Sites"></nav>
+    <aside class="side">
+      <div class="brand">
+        <a href="#" class="brand-link"><span class="logo" aria-hidden="true">&#9673;</span><span>Server Basics</span></a>
+        <p class="brand-sub"><b>Servers.</b> Click a role to learn what it does and how to set it up.</p>
+      </div>
+      <nav id="nav" class="nav" aria-label="Server roles"></nav>
+      <div class="side-foot">
+        Each role is set up on Windows Server, Ubuntu, and Alma or Rocky Linux.<br>
+        Pick the system with the buttons inside the lesson.
+      </div>
+    </aside>
+    <main id="main" class="main"><div class="level-bar-wrap" id="level-bar"></div><div id="content" aria-live="polite"></div></main>
+  </div>
+
+  <script src="lessons.js"></script>
+  <script src="level.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

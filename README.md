@@ -12,10 +12,12 @@ in the right column:
    link to the matching row on the Protocols site to see the real packets,
 5. **When it breaks**: the usual failures, what they look like, and what to check first.
 
-Rows: **DHCP**, **DNS**, **Web Server**, **AD DS**. They tell one story: a PC gets its address from DHCP,
-resolves `www.lab.local` through a DNS **A record** the student created (the DNS row also covers AAAA,
-MX, PTR and TXT), loads the page from a web server the student built, and the whole thing sits inside an
-Active Directory domain whose controller is also the DNS server.
+Rows: **DHCP**, **DNS**, **Web Server**, **File Server**, **AD DS**. They tell one story: a PC gets its
+address from DHCP, resolves `www.lab.local` through a DNS **A record** the student created (the DNS row
+also covers AAAA, MX, PTR and TXT), loads the page from a web server the student built (the Web Server
+row walks the request methods), gets that page onto the server through an SMB share or an FTP/SFTP
+upload (the File Server row compares the three), and the whole thing sits inside an Active Directory
+domain whose controller is also the DNS server.
 
 No frameworks, no build step: plain HTML, CSS and JavaScript served by nginx in a Docker container.
 
@@ -91,6 +93,10 @@ in the browser (`servers-os`), and `index.html?os=ubuntu` (or `win`, `rhel`) ope
 system. The buttons are defined in `OSES` in `site/lessons.js`; each setup section carries an `os`
 object with one block per OS id: `{ intro, steps, after }`, where a step is a string, a level object, or
 `{ text, cmd, out }` for a step with a command and the output to expect.
+
+The File Server row sets up an SMB share on every system (File Server role, Samba), then FTP (IIS FTP,
+vsftpd) and SFTP (OpenSSH) as optional steps, and links to the TFTP row on the Protocols site for a file
+transfer on the wire.
 
 AD DS is the one row where the three systems are not equivalent: Windows Server and Samba on Ubuntu both
 act as the domain controller, while Alma / Rocky (whose repositories do not ship the Samba DC role) joins

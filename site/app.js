@@ -332,6 +332,7 @@
         lv(s.p || []).forEach(function (p) { h.push('<p>' + p + '</p>'); });
         h.push('<div class="diagram">' + diagram(lesson) + '</div>');
         lv(s.after || []).forEach(function (p) { h.push('<p>' + p + '</p>'); });
+        if (s.steps) { h.push('<ol class="steps">'); lv(s.steps).forEach(function (t) { h.push('<li>' + t + '</li>'); }); h.push('</ol>'); }
         h.push('</section>');
       } else h.push(sectionHtml(s));
     });
@@ -365,7 +366,7 @@
     h.push('</ol>');
     h.push('<h2>What a server is</h2>');
     lv(w.server).forEach(function (p) { h.push('<p>' + p + '</p>'); });
-    h.push('<h2>The four roles on this site</h2>');
+    h.push('<h2>The roles on this site</h2>');
     h.push('<div class="table-wrap"><table class="lab"><tr><th>Role</th><th>What it answers</th><th>Ports</th><th>Windows Server role</th><th>Linux packages</th></tr>');
     LESSONS.forEach(function (l) {
       h.push('<tr><td><a href="#' + l.id + '">' + esc(l.title) + '</a></td><td>' + lv(l.answers) + '</td><td class="mono">' + esc(lv(l.ports)) + '</td><td>' + esc(l.winRole) + '</td><td>' + esc(l.linuxPkgs) + '</td></tr>');

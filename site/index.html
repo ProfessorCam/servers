@@ -4,6 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Server Basics</title>
+  <script>
+    /* Apply the theme before the first paint: the visitor's choice (stored, or ?theme= in the link), else dark. */
+    (function () { var t = null; try { t = localStorage.getItem('packet-lessons-theme'); } catch (e) {}
+      if (t !== 'dark' && t !== 'light') { var q = /[?&]theme=(dark|light)/i.exec(location.search); t = q ? q[1].toLowerCase() : 'dark'; }
+      document.documentElement.dataset.theme = t; })();
+  </script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>

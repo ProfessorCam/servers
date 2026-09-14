@@ -295,6 +295,25 @@
     content.innerHTML = h.join('');
   }
 
+  /* ---------- light / dark mode: dark unless the visitor picks light; index.html applies it before first paint ---------- */
+
+  var THEME_KEY = 'packet-lessons-theme';
+  function currentTheme() { return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'; }
+  function applyTheme(t, remember) {
+    document.documentElement.dataset.theme = t;
+    if (remember) { try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* private mode: lasts for this page only */ } }
+    var b = document.getElementById('theme-btn');
+    if (b) { b.innerHTML = t === 'dark' ? '&#9728;' : '&#9790;'; b.title = t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'; b.setAttribute('aria-label', b.title); }
+  }
+  function wireThemeButton(wrap) {
+    if (!wrap) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.id = 'theme-btn'; b.className = 'theme-btn';
+    b.addEventListener('click', function () { applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', true); });
+    wrap.appendChild(b);
+    applyTheme(currentTheme(), false);
+  }
+
   /* ---------- routing ---------- */
 
   function route() {
@@ -312,6 +331,7 @@
   buildNav();
   window.rerender = function () { var y = main.scrollTop; route(); main.scrollTop = y; };
   wireLevelBar(document.getElementById('level-bar'));
+  wireThemeButton(document.getElementById('level-bar'));
   window.addEventListener('hashchange', route);
   route();
 })();

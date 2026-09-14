@@ -61,6 +61,15 @@ of prose can be a plain string (same at every level) or an object with `s`, `m` 
 of paragraphs may mix the two. A missing key falls back to Moderate; an empty string leaves that
 paragraph (or setup step) out at that level. Rows refer to each other with `{{row:id}}`.
 
+## Light and dark mode
+
+The site is dark by default. The round button beside the level bar switches to light, and the choice is
+stored in the browser under the same key the Packet Forensics site uses (`packet-lessons-theme`), so it
+carries across the two. A link with `?theme=light` (or `dark`) opens the site in that mode for a visitor
+who has not chosen yet. The palette is the set of CSS variables at the top of `site/style.css`; the dark
+values are the `:root[data-theme="dark"]` block at the bottom, and `index.html` applies the theme before
+the first paint so there is no flash.
+
 ## Operating system switcher (Windows Server | Ubuntu | Alma / Rocky)
 
 Inside each row, the **Set it up** section has three buttons. The choice applies to every row, is stored
